@@ -1,0 +1,15 @@
+# Executed pipeline logs (COLMAP / OpenMVS)
+*.log
+
+# Third-party source checkouts and prebuilt binaries
+# (managed separately, not project artifacts)
+colmap/
+openMVS/
+vcglib/
+tools/
+
+# Large regenerable intermediates / scratch copies
+work/*.dmap
+work/db.db
+work/dense/
+work/images/
