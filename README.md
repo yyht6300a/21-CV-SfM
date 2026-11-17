@@ -189,3 +189,36 @@ The recovered camera poses and sparse structure (three views):
 - [x] Mesh reconstruction (OpenMVS)
 - [ ] Mesh refinement (RefineMesh) - pending memory tuning
 - [ ] Texturing (TextureMesh) - pending memory tuning
+
+---
+
+## Technical points
+
+The pipeline relies on the following computer-vision techniques, mapped to the pipeline stage where each one is used and to the AI6121 lecture where it is introduced.
+
+### Pipeline stage → technique
+
+| Stage | Techniques used |
+|---|---|
+| HEIC → JPG | Image format conversion (preserves EXIF focal length) |
+| Feature extraction | SIFT keypoint detection and 128-dimensional descriptor (Lecture 05) |
+| Feature matching | Exhaustive descriptor matching with GPU acceleration (Lectures 05, 10) |
+| Geometric verification | RANSAC, fundamental/essential matrix estimation, homography fitting (Lecture 10) |
+| Camera modeling | Pinhole projection, intrinsic matrix `K` (focal length, principal point, radial distortion), shared single camera, EXIF focal prior (Lecture 08) |
+| Pose & structure recovery | Incremental SfM, absolute pose estimation (P3P/PnP), two-view triangulation (Lectures 10, 11) |
+| Global refinement | Bundle adjustment minimizing the reprojection error over cameras and 3D points (Lecture 11) |
+| Dense reconstruction | Multi-view stereo depth-map estimation (PatchMatch) and depth-map fusion (Lecture 11) |
+| Surface reconstruction | Delaunay tetrahedralization + graph-cut (OpenMVS `ReconstructMesh`) |
+| Mesh post-processing | Decimation, spike/spurious-face removal, hole filling |
+| Texturing | View selection, UV-atlas generation, color projection from source photos |
+
+### Key mathematical concepts
+
+- **Pinhole projection**: `x = f X / Z`, `y = f Y / Z`; homogeneous form `x = K[R | t] X` with the 3×4 projection matrix (Lecture 08).
+- **Rigid transform**: world-to-camera `X_cam = R X_world + T` (rotation + translation).
+- **Epipolar geometry**: epipolar constraint `p^T F p' = 0`; essential matrix `E = [T]_× R`; fundamental matrix `F = K^{-T} E K'^{-1}` (Lecture 10).
+- **Triangulation / disparity**: for parallel stereo, `d = x_l - x_r = fT / Z` and `Z = fT / d` (Lecture 10).
+- **Robust estimation**: RANSAC for outlier-rejected model fitting (Lecture 10).
+- **Bundle adjustment**: `min sum_{i,j} || x_ij - proj(M_i, X_j) ||^2` (Lecture 11).
+- **Multi-view stereo**: depth-map estimation and fusion into a dense point cloud (Lecture 11).
+
